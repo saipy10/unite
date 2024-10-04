@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "341387419489",
+    "project_id": "unite-a97de",
+    "storage_bucket": "unite-a97de.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:341387419489:android:a1ebf5369917a6b2ea6f20",
+        "android_client_info": {
+          "package_name": "com.example.unite"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAl3fsXlrOHVlzI5GRw1DGKu35o9V0ycM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:unite/pages/home_page.dart';
 
@@ -164,7 +165,7 @@ class _LandingPageState extends State<LandingPage> {
                               ),
                               offset: Offset(
                                   0, 40), // Adjust position of popup menu
-                              onSelected: (value) {
+                              onSelected: (value) async {
                                 // Handle the selected option
                                 if (value == 'my_account') {
                                   // Handle My Account
@@ -172,6 +173,8 @@ class _LandingPageState extends State<LandingPage> {
                                   // Handle Progress
                                 } else if (value == 'logout') {
                                   // Handle Logout
+                                  await FirebaseAuth.instance
+                                      .signOut(); // Sign out
                                 }
                               },
                               itemBuilder: (BuildContext context) {
