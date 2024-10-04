@@ -1,8 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Importing intl for date formatting
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Authentication
+import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:unite/pages/cards_page.dart'; // Firestore for user data
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String? userName;
+  int streakCount = 0;
+  List<String> achievements = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData(); // Fetch user data when widget is initialized
+  }
+
+  // Function to fetch the user's name, streak count, and achievements from Firestore
+  Future<void> fetchUserData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser; // Get current user
+      if (user != null) {
+        // Fetch user document from Firestore (assuming you have a 'users' collection)
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        setState(() {
+          userName =
+              userDoc['username']; // Fetch 'username' field from Firestore
+          streakCount = userDoc['streakCount'] ??
+              0; // Fetch 'streakCount' field from Firestore
+          achievements = List<String>.from(userDoc['achievements'] ??
+              []); // Fetch 'achievements' field from Firestore
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          userName = 'User'; // Default name if user is not logged in
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userName = 'User'; // Fallback name in case of an error
+        streakCount = 0; // Fallback streak count
+        achievements = []; // Fallback achievements
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,71 +76,77 @@ class HomePage extends StatelessWidget {
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: isSmallScreen
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome message
-                        Text(
-                          "Welcome, User",
-                          style: TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 16), // Spacing
+              child: isLoading
+                  ? Center(
+                      child:
+                          CircularProgressIndicator()) // Show loading indicator
+                  : isSmallScreen
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Welcome message
+                            Text(
+                              "Welcome, $userName", // Display fetched username
+                              style: TextStyle(
+                                  fontSize: 32, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 16), // Spacing
 
-                        // Streak container with full width on small screens
-                        _buildStreakContainer(streakDays, constraints.maxWidth),
+                            // Streak container with full width on small screens
+                            _buildStreakContainer(
+                                streakDays, constraints.maxWidth),
 
-                        SizedBox(height: 16), // Spacing
+                            SizedBox(height: 16), // Spacing
 
-                        // Achievements container with full width on small screens
-                        _buildAchievementsContainer(constraints.maxWidth),
+                            // Achievements container with full width on small screens
+                            _buildAchievementsContainer(constraints.maxWidth),
 
-                        SizedBox(height: 16), // Spacing
+                            SizedBox(height: 16), // Spacing
 
-                        // Jump Back In section with full width on small screens
-                        _buildJumpBackInSection(constraints.maxWidth),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left side container for streak and achievements
-                        Container(
-                          width: 420,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Welcome message
-                              Text(
-                                "Welcome, User",
-                                style: TextStyle(
-                                    fontSize: 32, fontWeight: FontWeight.bold),
+                            // Jump Back In section with full width on small screens
+                            _buildJumpBackInSection(constraints.maxWidth),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left side container for streak and achievements
+                            Container(
+                              width: 420,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Welcome message
+                                  Text(
+                                    "Welcome, $userName", // Display fetched username
+                                    style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 16), // Spacing
+
+                                  // Streak container
+                                  _buildStreakContainer(streakDays, 365),
+
+                                  SizedBox(height: 16), // Spacing
+
+                                  // Achievements container
+                                  _buildAchievementsContainer(365),
+                                ],
                               ),
-                              SizedBox(height: 16), // Spacing
+                            ),
 
-                              // Streak container
-                              _buildStreakContainer(streakDays, 365),
-
-                              SizedBox(height: 16), // Spacing
-
-                              // Achievements container
-                              _buildAchievementsContainer(365),
-                            ],
-                          ),
+                            // Right side for Jump Back In section
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildJumpBackInSection(double.infinity),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-
-                        // Right side for Jump Back In section
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildJumpBackInSection(double.infinity),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
             ),
           );
         },
@@ -112,7 +173,7 @@ class HomePage extends StatelessWidget {
           ),
           SizedBox(height: 8), // Spacing
           Text(
-            "5", // Example streak count
+            "$streakCount", // Display fetched streak count
             style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16), // Spacing
@@ -172,18 +233,20 @@ class HomePage extends StatelessWidget {
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8), // Spacing
-          // Example badges
+          // Display fetched achievements
           Wrap(
             spacing: 12.0, // Adjusted space between badges
             runSpacing: 12.0, // Adjusted space between rows of badges
-            children: List.generate(5, (index) => BadgeWidget(index: index)),
+            children: achievements.map((achievement) {
+              return BadgeWidget(title: achievement);
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  // Widget to build Jump Back In section
+// Widget to build Jump Back In section
   Widget _buildJumpBackInSection(double containerWidth) {
     return Container(
       width: containerWidth, // Dynamic width for Jump Back In container
@@ -196,18 +259,33 @@ class HomePage extends StatelessWidget {
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16), // Placeholder for image
-          _buildJumpBackInContent(), // Encapsulated content and continue button
+          _buildJumpBackInContent("Train", () {
+            // Define your action for "Thinking in Code" here
+            print("Train pressed");
+          }),
+          SizedBox(height: 16),
+          // Update here to include specific names and onPressed functions
+          _buildJumpBackInContent("Thinking in Code", () {
+            // Define your action for "Thinking in Code" here
+            print("Thinking in Code pressed");
+          }),
           SizedBox(height: 16), // Placeholder for image
-          _buildJumpBackInContent(), // Encapsulated content and continue button
+          _buildJumpBackInContent("Fundamentals", () {
+            // Define your action for "Fundamentals" here
+            print("Fundamentals pressed");
+          }),
           SizedBox(height: 16), // Placeholder for image
-          _buildJumpBackInContent(), // Encapsulated content and continue button
+          _buildJumpBackInContent("Python", () {
+            // Define your action for "Python" here
+            print("Python pressed");
+          }),
         ],
       ),
     );
   }
 
-  // Widget for content below Jump Back In section with container and styled button
-  Widget _buildJumpBackInContent() {
+// Widget for content below Jump Back In section with name and onPressed
+  Widget _buildJumpBackInContent(String name, VoidCallback onPressed) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -221,23 +299,24 @@ class HomePage extends StatelessWidget {
             height: 150, // space for adding image
           ),
           Text(
-            "CS & PROGRAMMING - LEVEL 1",
+            name, // Use the passed name here
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16), // Spacing above the button
-          SizedBox(
-            width: double.infinity, // Button takes full width
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // Border radius
-                ),
+          SizedBox(height: 16), // Spacing
+          InkWell(
+            onTap: onPressed, // Trigger onPressed when tapped
+            child: Container(
+              height: 48, // Adjusted height
+              width: double.infinity, // Full width
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                "Continue path",
-                style: TextStyle(fontSize: 20),
+              child: Center(
+                child: Text(
+                  "Continue",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ),
@@ -247,33 +326,34 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Extension method to check if the day is today
+extension DateTimeExtension on DateTime {
+  bool isToday() {
+    final now = DateTime.now();
+    return day == now.day && month == now.month && year == now.year;
+  }
+}
+
 // Badge widget for achievements
 class BadgeWidget extends StatelessWidget {
-  final int index;
-  const BadgeWidget({super.key, required this.index});
+  final String title;
+  const BadgeWidget({required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      height: 100,
+      width: 100,
       decoration: BoxDecoration(
-        color: Colors.blue, // Background color for badges
-        borderRadius: BorderRadius.circular(8), // Rounded corners
+        color: Colors.blueAccent,
+        borderRadius: BorderRadius.circular(50),
       ),
-      child: Text(
-        'Badge ${index + 1}', // Badge text
-        style: TextStyle(color: Colors.white), // Text color
+      child: Center(
+        child: Text(
+          title, // Display achievement title
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
-  }
-}
-
-// Extension method to check if a date is today
-extension DateTimeExtension on DateTime {
-  bool isToday() {
-    final now = DateTime.now();
-    return this.year == now.year &&
-        this.month == now.month &&
-        this.day == now.day;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
 import 'package:unite/pages/home_page.dart';
 
 class LandingPage extends StatefulWidget {
@@ -10,6 +11,33 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
+  int streakCount = 0; // Variable to hold streak count
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStreakCount(); // Fetch streak count when the widget is initialized
+  }
+
+  // Method to fetch streak count from Firestore
+  Future<void> fetchStreakCount() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get(); // Fetch user data
+        setState(() {
+          streakCount = userData['streakCount'] ?? 0; // Update streak count
+        });
+      } catch (e) {
+        // Handle any errors here (e.g., log them)
+        print('Error fetching streak count: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -25,8 +53,7 @@ class _LandingPageState extends State<LandingPage> {
                 return Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment
-                          .start, // Align everything to the start
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         // Show "Unite" only if screen width is greater than 765px
                         if (constraints.maxWidth > 765) ...[
@@ -35,72 +62,55 @@ class _LandingPageState extends State<LandingPage> {
                               left: 36,
                               top: 8.0,
                               bottom: 8.0,
-                            ), // Adjusted padding
+                            ),
                             child: Text(
-                              "Unite", // The text to display
+                              "Unite",
                               style: TextStyle(
-                                fontSize: 26, // Increased font size
-                                fontWeight:
-                                    FontWeight.bold, // Make the text bold
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ],
-                        // Dynamically show the TabBar based on width
+                        // TabBar
                         Container(
-                          padding: const EdgeInsets.only(
-                              left:
-                                  16), // Add padding to move TabBar closer to "Unite"
-                          width: 280, // Set a fixed width for the TabBar
+                          padding: const EdgeInsets.only(left: 16),
+                          width: 280,
                           child: TabBar(
                             indicator: BoxDecoration(
-                              color: Colors
-                                  .transparent, // Background color of the indicator
+                              color: Colors.transparent,
                               border: Border(
                                 bottom: BorderSide(
-                                  color: Colors
-                                      .black, // Color of the tab highlighter line
-                                  width:
-                                      4.0, // Width of the tab highlighter line
+                                  color: Colors.black,
+                                  width: 4.0,
                                 ),
                               ),
                             ),
-                            labelColor:
-                                Colors.black, // Text color for selected tab
-                            unselectedLabelColor: Colors
-                                .black54, // Text color for unselected tabs
+                            labelColor: Colors.black,
+                            unselectedLabelColor: Colors.black54,
                             tabs: [
                               Tab(
                                 child: Row(
-                                  mainAxisSize: MainAxisSize
-                                      .min, // Minimize the width of the row
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.home), // Icon for Home tab
-                                    SizedBox(
-                                        width:
-                                            4), // Spacing between icon and text
+                                    Icon(Icons.home),
+                                    SizedBox(width: 4),
                                     Text(
-                                      'Home', // Tab text
-                                      style: TextStyle(
-                                          fontSize: 16), // Increase text size
+                                      'Home',
+                                      style: TextStyle(fontSize: 16),
                                     ),
                                   ],
                                 ),
                               ),
                               Tab(
                                 child: Row(
-                                  mainAxisSize: MainAxisSize
-                                      .min, // Minimize the width of the row
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons
-                                        .videogame_asset), // Icon for Compete tab
-                                    SizedBox(
-                                        width:
-                                            4), // Spacing between icon and text
+                                    Icon(Icons.videogame_asset),
+                                    SizedBox(width: 4),
                                     Text(
-                                      'Compete', // Tab text
-                                      style: TextStyle(
-                                          fontSize: 16), // Increase text size
+                                      'Compete',
+                                      style: TextStyle(fontSize: 16),
                                     ),
                                   ],
                                 ),
@@ -108,26 +118,21 @@ class _LandingPageState extends State<LandingPage> {
                             ],
                           ),
                         ),
-                        Spacer(), // Push the following widgets to the right
-                        // Dynamically show search bar if screen width is more than 765px
+                        Spacer(),
+                        // Search bar
                         if (constraints.maxWidth > 765)
                           Padding(
-                            padding: const EdgeInsets.only(
-                                right:
-                                    180), // Increase padding to shift search bar more left
+                            padding: const EdgeInsets.only(right: 180),
                             child: Container(
-                              width: constraints.maxWidth *
-                                  0.3, // Responsive width for the search bar
+                              width: constraints.maxWidth * 0.3,
                               child: TextField(
                                 decoration: InputDecoration(
-                                  filled: true, // Fill the background
-                                  fillColor:
-                                      Colors.grey[300], // Gray background color
-                                  prefixIcon: Icon(Icons.search), // Search icon
+                                  filled: true,
+                                  fillColor: Colors.grey[300],
+                                  prefixIcon: Icon(Icons.search),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide:
-                                        BorderSide.none, // Remove the border
+                                    borderSide: BorderSide.none,
                                   ),
                                   contentPadding: EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 10),
@@ -139,63 +144,42 @@ class _LandingPageState extends State<LandingPage> {
                         Row(
                           children: [
                             Icon(Icons.flash_on,
-                                color: Colors.yellow,
-                                size: 24), // Increased icon size
-                            SizedBox(
-                                width: 4), // Spacing between icon and count
+                                color: Colors.yellow, size: 24),
+                            SizedBox(width: 4),
                             Text(
-                              '5', // Streak count
+                              '$streakCount', // Display the fetched streak count
                               style: TextStyle(
-                                fontSize: 20, // Increased font size for count
-                                fontWeight:
-                                    FontWeight.w600, // Increased font weight
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            SizedBox(
-                                width:
-                                    36), // Increased spacing between streak and profile icon
+                            SizedBox(width: 36),
                             // Circular Avatar for profile icon
                             PopupMenuButton<String>(
                               icon: CircleAvatar(
-                                radius: 16, // Size of the avatar
-                                backgroundColor:
-                                    Colors.grey[300], // Avatar background
-                                child: Icon(Icons.person,
-                                    color: Colors.black), // Avatar icon
+                                radius: 16,
+                                backgroundColor: Colors.grey[300],
+                                child: Icon(Icons.person, color: Colors.black),
                               ),
-                              offset: Offset(
-                                  0, 40), // Adjust position of popup menu
+                              offset: Offset(0, 40),
                               onSelected: (value) async {
-                                // Handle the selected option
-                                if (value == 'my_account') {
-                                  // Handle My Account
-                                } else if (value == 'progress') {
-                                  // Handle Progress
-                                } else if (value == 'logout') {
-                                  // Handle Logout
-                                  await FirebaseAuth.instance
-                                      .signOut(); // Sign out
+                                if (value == 'logout') {
+                                  await FirebaseAuth.instance.signOut();
                                 }
                               },
                               itemBuilder: (BuildContext context) {
                                 return [
                                   PopupMenuItem<String>(
                                     value: 'my_account',
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 0, horizontal: 0),
                                     child: Center(child: Text('My Account')),
                                   ),
                                   PopupMenuItem<String>(
                                     value: 'progress',
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 0, horizontal: 0),
                                     child: Center(child: Text('Progress')),
                                   ),
-                                  PopupMenuDivider(), // Divider for separation
+                                  PopupMenuDivider(),
                                   PopupMenuItem<String>(
                                     value: 'logout',
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 0, horizontal: 0),
                                     child: Center(child: Text('Logout')),
                                   ),
                                 ];

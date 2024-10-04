@@ -8,18 +8,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey: "AIzaSyBSeGAk1nUq-YXNYqd-vrQjJ5YuxoQoF_A",
-      appId: "1:341387419489:android:a1ebf5369917a6b2ea6f20",
-      messagingSenderId: "341387419489",
-      projectId: "unite-a97de"
-    ),
+        apiKey: "AIzaSyAooRFwlhB0eWhZoRpnUyPpItzHCVqXMKU",
+        appId: "1:652203000256:web:dc4ab7dca3699034a3c825",
+        messagingSenderId: "652203000256",
+        projectId: "unite-b2c55"),
   ); // Initialize Firebase
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,7 +28,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: AuthWrapper(),
+      home: LandingPage(),
     );
   }
 }
@@ -48,7 +47,8 @@ class AuthWrapper extends StatelessWidget {
             return LoginSignupPage(); // Show login/signup page
           }
         }
-        return Center(child: CircularProgressIndicator()); // Show loading indicator
+        return Center(
+            child: CircularProgressIndicator()); // Show loading indicator
       },
     );
   }
